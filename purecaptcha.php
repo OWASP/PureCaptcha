@@ -2,16 +2,27 @@
 /**
  * OWASP PureCaptcha
  * Generates simple CAPTCHAs without requiring any third party library.
+ * @version 1.1
  */
 class PureCaptcha 
 {
 	protected $charWidth=6;
 	protected $charHeight=13;
-	protected $chars="2346789ABDHKLMNPRTWXYZ";
-	protected $ascii="eNrtW0FuwyAQ/NIANjbOa3LMG6r8vWrrSonkkt0xDWDvIcGXEYHM7O6s4bp4v3zcFlyuiwu/T/Hn4ba4h49fx7COwzqO3+P964tF+i0kViRWJLaQ4RGJF3PiETnQyFGzzidklCA31znlkMjt7Zzb2+y/kjQ79MwEbEH/+kOftsjxLHKehK7cbYT/qu0KNBcHmosjzcVI63yi1znTyERHCAd6oZX479uL/yIuBho5SFgs5z8kc0YaOUm4iJfxXxVbEr23Djy0Dv+D1T/iXzvSyKjhop7/r+M/LP5v83+w+qdM/aOP/6LKqXr9r0Lm+Z+H1uH/aPGf87/Y7X8t/jfA/2j8b43/MP/7Pv5P7frfbHYPtKOszn8VcqIrxPrxXwetw/+5n/pfz395/Y8L2//HG+sf1ZwzjUw0Utf/byH+J+N/bf7L47/xv/z7L7QnAFG+7NgAgDYAnRngHgog50wAXAcU9BtgaBqDEz3nTK/zVALw/QiAbwHxFvg/X4G53QJwuwVgR4CCZYBc9wh0BpD3gKDuAVkJVE4Aw5EEgGICcF0JgG+C4vQCGI/QBTqWCT5cCSSDVhJANAH0KwAzwfsFMB3xHBzEJliFLHwPoMY5OBEy0cj8OWi0mAFmM8G1D0LwHgC0CYbaBIvaBB1mgHRuAajOEBW+CcNnANGcM408UwnkYQLoTwBWApUTgN0F7vAuDNRdILsLvymA+ycgmwSd";
+	protected $chars="2346789ABDHKLMNPRTWXYZ"; //do not modify!
+	protected $ascii="eNrtW0FuwyAQ/NIANjbOa3LMG6r8vWrrSonkkt0xDWDvIcGXEYHM7O6s4b
+	p4v3zcFlyuiwu/T/Hn4ba4h49fx7COwzqO3+P964tF+i0kViRWJLaQ4RGJF3PiETnQyFGzzidklC
+	A31znlkMjt7Zzb2+y/kjQ79MwEbEH/+kOftsjxLHKehK7cbYT/qu0KNBcHmosjzcVI63yi1znTyE
+	RHCAd6oZX479uL/yIuBho5SFgs5z8kc0YaOUm4iJfxXxVbEr23Djy0Dv+D1T/iXzvSyKjhop7/r+
+	M/LP5v83+w+qdM/aOP/6LKqXr9r0Lm+Z+H1uH/aPGf87/Y7X8t/jfA/2j8b43/MP/7Pv5P7frfbH
+	YPtKOszn8VcqIrxPrxXwetw/+5n/pfz395/Y8L2//HG+sf1ZwzjUw0Utf/byH+J+N/bf7L47/xv/
+	z7L7QnAFG+7NgAgDYAnRngHgog50wAXAcU9BtgaBqDEz3nTK/zVALw/QiAbwHxFvg/X4G53QJwuw
+	VgR4CCZYBc9wh0BpD3gKDuAVkJVE4Aw5EEgGICcF0JgG+C4vQCGI/QBTqWCT5cCSSDVhJANAH0Kw
+	AzwfsFMB3xHBzEJliFLHwPoMY5OBEy0cj8OWi0mAFmM8G1D0LwHgC0CYbaBIvaBB1mgHRuAajOEB
+	W+CcNnANGcM408UwnkYQLoTwBWApUTgN0F7vAuDNRdILsLvymA+ycgmwSd";
 	function __construct()
 	{
-		$this->ascii=unserialize(gzuncompress(base64_decode($this->ascii)));
+		$this->ascii=unserialize(gzuncompress(base64_decode(
+			preg_replace('/\s+/', '', $this->ascii))));
 	}
 	/**
 	 * Generates random text for use in captcha
@@ -51,7 +62,8 @@ class PureCaptcha
 			for ($j=0;$j<$height;++$j)
 			{
 				for ($i=0;$i<$width;++$i)
-					$result[$baseY+$j][$baseX+$i]= 1-$this->ascii[$this->asciiEntry($text[$index])][$j][$i];
+					$result[$baseY+$j][$baseX+$i]=
+					 1-$this->ascii[$this->asciiEntry($text[$index])][$j][$i];
 				for ($i=0;$i<$spacing;++$i)
 				$result[$baseY+$j][$baseX+$width+$i]=0;
 			}
@@ -69,7 +81,7 @@ class PureCaptcha
 	}
 	/**
 	 * generates a monochrome BMP file 
-	 * a bitmap needs to be sent to this function, and it needs to literally be a bitmap,
+	 * a bitmap needs to be sent to this function
 	 * i.e a 2D array with every element being either 1 or 0
 	 * @param  integer $width
 	 * @param  integer $height
@@ -86,18 +98,20 @@ class PureCaptcha
 		$size=$rowSize*$height + 62; //62 metadata size 
 		#bitmap header
 		$data= "BM"; //header
-		$data.= (pack('V',$size)); //bitmap size , 4 bytes unsigned little endian
+		$data.= (pack('V',$size)); //bitmap size ,4 bytes unsigned little endian
 		$data.= "RRRR";
-		$data.= (pack('V',14+40+8)); //bitmap data start offset , 4 bytes unsigned little endian, 14 forced, 40 header, 8 colors
+		$data.= (pack('V',14+40+8)); //bitmap data start offset , 
+		//4 bytes unsigned little endian, 14 forced, 40 header, 8 colors
 
 		#info header
-		$data.= pack('V',40); //bitmap header size (min 40), 4 bytes unsigned little-endian
+		$data.= pack('V',40); //bitmap header size (min 40),
+		//4 bytes unsigned little-endian
 		$data.= (pack('V',$width)); //bitmap width , 4 bytes signed integer
 		$data.= (pack('V',$height)); //bitmap height , 4 bytes signed integer
 		$data.= (pack('v',1)); //number of colored plains , 2 bytes 
 		$data.= (pack('v',1)); //color depth , 2 bytes 
 		$data.= (pack('V',0)); //compression algorithm , 4 bytes (0=none, RGB)
-		$data.= (pack('V',0)); //size of raw data, 0 is fine for no compression , 4 bytes 
+		$data.= (pack('V',0)); //size of raw data, 0 is fine for no compression 
 		$data.= (pack('V',11808)); //horizontal resolution (dpi), 4 bytes 
 		$data.= (pack('V',11808)); //vertical resolution (dpi), 4 bytes 
 		$data.= (pack('V',0)); //number of colors in pallette (0 = all), 4 bytes 
@@ -117,7 +131,7 @@ class PureCaptcha
 					return $data;
 				}
 	/**
-	 * Converts a bitmap (array with bits in elements) to a bytemap, which is necessary for outputting it
+	 * Converts a bitmap to a bytemap, which is necessary for outputting it
 	 * 
 	 */
 	protected function bitmap2bytemap($bitmap)
