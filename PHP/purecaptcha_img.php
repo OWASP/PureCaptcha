@@ -1,9 +1,9 @@
 <?php
 session_start();
 if (!isset($_GET['t']))
-	$title="default";
+    $title="default";
 else
-	$title=$_GET['t'];
+    $title=$_GET['t'];
 
 
 require_once "purecaptcha.php";
