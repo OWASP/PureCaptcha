@@ -2,10 +2,10 @@
 session_start();
 function checkCaptcha($response)
 {
-    if (isset($_SESSION['captcha_login_form']) && strtolower($_SESSION['captcha_login_form'])===strtolower($response))
-        $res=true;
+    if (isset($_SESSION['captcha_login_form']) && strtolower($_SESSION['captcha_login_form']) === strtolower($response))
+        $res = true;
     else
-        $res=false;
+        $res = false;
     //this has to be done everytime you check captcha
     //otherwise your captcha is ineffective (not one-time)
     unset($_SESSION['captcha_login_form']); 
