@@ -66,6 +66,34 @@ class PureCaptcha
     protected $length;
 
     /**
+     * The spacing between two characters in the captcha
+     *
+     * @var number
+     */
+    protected $spacing;
+
+    /**
+     * The degree of rotation of captcha text clockwise
+     *
+     * @var number
+     */
+    protected $degree;
+
+    /**
+     * Amount to be scaled in x direction
+     *
+     * @var number
+     */
+    protected $scaleX;
+
+    /**
+     * Amount to be scaled in y direction
+     *
+     * @var number
+     */
+    protected $scaleY;
+
+    /**
      * Constructor to intialize bitmap
      */
     function __construct()
@@ -76,7 +104,12 @@ class PureCaptcha
         // Setting up default values
         $this->length = 4;
         $this->captcha = $this->randomText();
-
+        $this->spacing = 2;
+        $this->degree = mt_rand(2, 4);
+        if (mt_rand() % 100 < 50)
+            $this->degree =- $this->degree;
+        $this->scaleX = 2.3;
+        $this->scaleY = 2.3;
     }
 
     /**
@@ -92,7 +125,7 @@ class PureCaptcha
     /**
      * Sets the captcha text
      *
-     * @param $captcha string
+     * @param string $captcha
      * @return bool whether the $captcha was valid for not
      */
     public function setCaptcha($captcha)
@@ -121,7 +154,7 @@ class PureCaptcha
     /**
      * Sets the length of the captcha text and generates a new captcha
      *
-     * @param $length integer
+     * @param integer $length
      */
     public function setLength($length)
     {
@@ -130,9 +163,88 @@ class PureCaptcha
     }
 
     /**
+     * Returns the spacing between two characters in the captcha
+     *
+     * @return number
+     */
+    public function getSpacing()
+    {
+        return $this->spacing;
+    }
+
+    /**
+     * Sets the spacing between two characters in the captcha
+     *
+     * @param number $spacing
+     */
+    public function setSpacing($spacing)
+    {
+        $this->spacing = $spacing;
+    }
+
+    /**
+     * Returns the degree of rotation of captcha text
+     *
+     * @return number
+     */
+    public function getDegree()
+    {
+        return $this->degree;
+    }
+
+    /**
+     * Sets the degree of rotation of captcha text
+     *
+     * @param number $degree
+     */
+    public function setDegree($degree)
+    {
+        $this->degree = $degree;
+    }
+
+    /**
+     * Returns the horizontal scale of the image
+     *
+     * @return number
+     */
+    public function getScaleX()
+    {
+        return $this->scaleX;
+    }
+
+    /**
+     * Sets the horizontal scale of the image
+     *
+     * @param number $scaleX
+     */
+    public function setScaleX($scaleX)
+    {
+        $this->scaleX = $scaleX;
+    }
+
+    /**
+     * Returns the vertical scale of the image
+     *
+     * @return number
+     */
+    public function getScaleY()
+    {
+        return $this->scaleY;
+    }
+
+    /**
+     * Sets the vertical scale of the image
+     *
+     * @param number $scaleY
+     */
+    public function setScaleY($scaleY)
+    {
+        $this->scaleY = $scaleY;
+    }
+
+    /**
      * Generates random text for use in captcha
      *
-     * @param  integer $length 
      * @return string          
      */
     protected function randomText()
@@ -147,7 +259,6 @@ class PureCaptcha
      * Returns the index of a char in $chars array
      *
      * @param character $char
-     * @param number
      */
     protected function asciiEntry($char)
     {
@@ -163,13 +274,13 @@ class PureCaptcha
      * which is a 2D array of ones and zeroes denoting the text
      *
      * @param string $text 
-     * @param number $spacing the spacing between two characters
      * @return array the final bitmap of the text
      */
-    protected function textBitmap($text, $spacing = 2)
+    protected function textBitmap($text)
     {
         $width = $this->charWidth;
         $height = $this->charHeight;
+        $spacing = $this->spacing;
         $result = array();
         $baseY = 0;
         $baseX = 0;
@@ -284,13 +395,12 @@ class PureCaptcha
      * Rotates a bitmap, returning new dimensions with the bitmap
      *
      * @param array $bitmap
-     * @param number $degree
      * @return array
      */
-    protected function rotateBitmap($bitmap, $degree)
+    protected function rotateBitmap($bitmap)
     {
-        $c = cos(deg2rad($degree));
-        $s = sin(deg2rad($degree));
+        $c = cos(deg2rad($this->degree));
+        $s = sin(deg2rad($this->degree));
 
         $width = count($bitmap[0]);
         $height = count($bitmap);
@@ -313,21 +423,19 @@ class PureCaptcha
      * Scales a bitmap to be bigger
      *
      * @param array $bitmap
-     * @param numver @scaleX the scale factor in x direction
-     * @param number @scaleY the scale factor in y direction
      * @return array
      */
-    protected function scaleBitmap($bitmap, $scaleX, $scaleY)
+    protected function scaleBitmap($bitmap)
     {
         $width = count($bitmap[0]);
         $height = count($bitmap);
-        $newHeight = $height * $scaleY;
-        $newWidth = $width * $scaleX;
+        $newHeight = $height * $this->scaleY;
+        $newWidth = $width * $this->scaleX;
         $result = array_fill(0, $newHeight, array_fill(0, $newWidth, 0));
         for ($j = 0; $j < $newHeight; ++$j)
             for ($i = 0; $i < $newWidth; ++$i)
-                $result[$j][$i] = $bitmap[(int)($j / $scaleY)]
-            [(int)($i / $scaleX)];
+                $result[$j][$i] = $bitmap[(int)($j / $this->scaleY)]
+            [(int)($i / $this->scaleX)];
         return $result;
     }
 
@@ -351,17 +459,13 @@ class PureCaptcha
      * Draw a captcha to the screen, returning its value
      *
      * @param bool $distort
-     * @param number @scale
      * @return string
      */
-    public function show($distort = true, $scale = 2.3)
+    public function show($distort = true)
     {
         $bitmap = $this->textBitmap($this->captcha);
-        $degree = mt_rand(2, 4);
-        if (mt_rand() % 100 < 50)
-            $degree =- $degree;
         $bitmap = $this->rotateBitmap($bitmap, $degree);
-        $bitmap = $this->scaleBitmap($bitmap, $scale, $scale);
+        $bitmap = $this->scaleBitmap($bitmap);
         if ($distort)
             $bitmap = $this->distort($bitmap);
         $this->displayBitmap($bitmap);
