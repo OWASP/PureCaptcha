@@ -11,14 +11,14 @@ class PureCaptcha
      *
      * @var number
      */
-    protected $charWidth = 6;
+    const CHAR_WIDTH = 6;
 
     /**
      * The height of the character
      *
      * @var number
      */
-    protected $charHeight = 13;
+    const CHAR_HEIGHT = 13;
 
     /**
      * The string from where the characters are chosen for Captcha
@@ -32,7 +32,7 @@ class PureCaptcha
      *
      * @var string
      */
-    protected $ascii = "eNrtW0FuwyAQ/NIANjbOa3LMG6r8vWrrSonkkt0xDWDvIcGXEYHM7O6s
+    const ASCII = "eNrtW0FuwyAQ/NIANjbOa3LMG6r8vWrrSonkkt0xDWDvIcGXEYHM7O6s
     4bp4v3zcFlyuiwu/T/Hn4ba4h49fx7COwzqO3+P964tF+i0kViRWJLaQ4RGJF3PiETnQyFGzzidk
     lCA31znlkMjt7Zzb2+y/kjQ79MwEbEH/+kOftsjxLHKehK7cbYT/qu0KNBcHmosjzcVI63yi1znT
     yERHCAd6oZX479uL/yIuBho5SFgs5z8kc0YaOUm4iJfxXxVbEr23Djy0Dv+D1T/iXzvSyKjhop7/
@@ -94,12 +94,19 @@ class PureCaptcha
     protected $scaleY;
 
     /**
+     * The noise percentage
+     *
+     * @var number
+     */
+    protected $noisePercent;
+
+    /**
      * Constructor to intialize bitmap
      */
     function __construct()
     {
         $this->bitmap = unserialize(gzuncompress(base64_decode(
-            preg_replace('/\s+/', '', $this->ascii))));
+            preg_replace('/\s+/', '', PureCaptcha::ASCII))));
 
         // Setting up default values
         $this->length = 4;
@@ -110,6 +117,7 @@ class PureCaptcha
             $this->degree =- $this->degree;
         $this->scaleX = 2.3;
         $this->scaleY = 2.3;
+        $this->noisePercent = 5;
     }
 
     /**
@@ -243,6 +251,26 @@ class PureCaptcha
     }
 
     /**
+     * Returns the noise percentage
+     *
+     * @return number
+     */
+    public function getNoisePercent()
+    {
+        return $this->noisePercent;
+    }
+
+    /**
+     * Sets the noise percentage
+     *
+     * @param number $noisePercent
+     */
+    public function setNoisePercent($noisePercent)
+    {
+        $this->noisePercent = $noisePercent;
+    }
+
+    /**
      * Generates random text for use in captcha
      *
      * @return string          
@@ -278,8 +306,8 @@ class PureCaptcha
      */
     protected function textBitmap($text)
     {
-        $width = $this->charWidth;
-        $height = $this->charHeight;
+        $width = PureCaptcha::CHAR_WIDTH;
+        $height = PureCaptcha::CHAR_HEIGHT;
         $spacing = $this->spacing;
         $result = array();
         $baseY = 0;
@@ -443,14 +471,13 @@ class PureCaptcha
      * Adds random noise to the captcha
      *
      * @param array $bitmap
-     * @param numver @noisePercent the percentage of noise to be added
      * @return array
      */
-    protected function distort($bitmap, $noisePercent = 5)
+    protected function distort($bitmap)
     {
         for ($j = 0; $j < count($bitmap); ++$j)
             for ($i = 0; $i < count($bitmap[0]); ++$i)
-                if (isset($bitmap[$j][$i]) && mt_rand() % 100 < $noisePercent)
+                if (isset($bitmap[$j][$i]) && mt_rand() % 100 < $this->noisePercent)
                     $bitmap[$j][$i] = 1;
         return $bitmap;
     }
@@ -458,18 +485,15 @@ class PureCaptcha
     /**
      * Draw a captcha to the screen, returning its value
      *
-     * @param bool $distort
      * @return string
      */
-    public function show($distort = true)
+    public function show()
     {
         $bitmap = $this->textBitmap($this->captcha);
         $bitmap = $this->rotateBitmap($bitmap, $degree);
         $bitmap = $this->scaleBitmap($bitmap);
-        if ($distort)
-            $bitmap = $this->distort($bitmap);
+        $bitmap = $this->distort($bitmap);
         $this->displayBitmap($bitmap);
         return $this->captcha;
     }
-
 }
