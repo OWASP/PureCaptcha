@@ -6,9 +6,32 @@
  */
 class PureCaptcha 
 {
+    /**
+     * The width of a character
+     *
+     * @var number
+     */
     protected $charWidth = 6;
+
+    /**
+     * The height of the character
+     *
+     * @var number
+     */
     protected $charHeight = 13;
+
+    /**
+     * The string from where the characters are chosen for Captcha
+     *
+     * @var string
+     */
     protected $chars = "2346789ABDHKLMNPRTWXYZ"; //do not modify!
+
+    /**
+     * The encoded form of the bitmap of all characters
+     *
+     * @var string
+     */
     protected $ascii = "eNrtW0FuwyAQ/NIANjbOa3LMG6r8vWrrSonkkt0xDWDvIcGXEYHM7O6s
     4bp4v3zcFlyuiwu/T/Hn4ba4h49fx7COwzqO3+P964tF+i0kViRWJLaQ4RGJF3PiETnQyFGzzidk
     lCA31znlkMjt7Zzb2+y/kjQ79MwEbEH/+kOftsjxLHKehK7cbYT/qu0KNBcHmosjzcVI63yi1znT
@@ -19,13 +42,27 @@ class PureCaptcha
     uwVgR4CCZYBc9wh0BpD3gKDuAVkJVE4Aw5EEgGICcF0JgG+C4vQCGI/QBTqWCT5cCSSDVhJANAH0
     KwAzwfsFMB3xHBzEJliFLHwPoMY5OBEy0cj8OWi0mAFmM8G1D0LwHgC0CYbaBIvaBB1mgHRuAajO
     EBW+CcNnANGcM408UwnkYQLoTwBWApUTgN0F7vAuDNRdILsLvymA+ycgmwSd";
+
+    /**
+     * The final bitmap of all 22 characters
+     * The bitmap of each character is a matrix of 13 rows and 6 columns
+     *
+     * @var array
+     */
+    protected $bitmap;
+
+    /**
+     * Constructor to intialize bitmap
+     */
     function __construct()
     {
-        $this->ascii = unserialize(gzuncompress(base64_decode(
+        $this->bitmap = unserialize(gzuncompress(base64_decode(
             preg_replace('/\s+/', '', $this->ascii))));
     }
+
     /**
      * Generates random text for use in captcha
+     *
      * @param  integer $length 
      * @return string          
      */
@@ -36,8 +73,12 @@ class PureCaptcha
             $res .= $this->chars[mt_rand(0, strlen($this->chars) - 1)];
         return $res;
     }
+
     /**
-     * returns the index of a char in $chars array
+     * Returns the index of a char in $chars array
+     *
+     * @param character $char
+     * @param number
      */
     protected function asciiEntry($char)
     {
@@ -47,9 +88,14 @@ class PureCaptcha
         return -1;
         
     }
+
     /**
-     * converts a text to a bitmap
+     * Converts a text to a bitmap
      * which is a 2D array of ones and zeroes denoting the text
+     *
+     * @param string $text 
+     * @param number $spacing the spacing between two characters
+     * @return array the final bitmap of the text
      */
     protected function textBitmap($text, $spacing = 2)
     {
@@ -63,7 +109,7 @@ class PureCaptcha
             for ($j = 0; $j < $height; ++$j) {
                 for ($i = 0; $i < $width; ++$i)
                     $result[$baseY + $j][$baseX + $i] = 1 - 
-                        $this->ascii[$this->asciiEntry(
+                        $this->bitmap[$this->asciiEntry(
                         $text[$index])][$j][$i];
                 for ($i = 0; $i < $spacing; ++$i)
                     $result[$baseY + $j][$baseX + $width + $i] = 0;
@@ -72,20 +118,23 @@ class PureCaptcha
         }
         return $result;
     }
+
     /**
-     * displays a bitmap string on the browser screen
+     * Displays a bitmap string on the browser screen
+     *
+     * @param array $bitmap the bitmap to be printed
      */
     protected function displayBitmap($bitmap)
     {
         header("Content-Type: image/bmp");
         echo $this->bitmap2bmp($bitmap);
     }
+
     /**
-     * generates a monochrome BMP file 
+     * Generates a monochrome BMP file 
      * a bitmap needs to be sent to this function
      * i.e a 2D array with every element being either 1 or 0
-     * @param  integer $width
-     * @param  integer $height
+     *
      * @param  array $bitmap
      * @return string
      */
@@ -136,8 +185,12 @@ class PureCaptcha
                         $data .= pack('C', 0);
         return $data;
     }
+
     /**
      * Converts a bitmap to a bytemap, which is necessary for outputting it
+     *
+     * @param array $bitmap
+     * @return array
      */
     protected function bitmap2bytemap($bitmap)
     {
@@ -157,9 +210,13 @@ class PureCaptcha
         }
         return $bytemap;
     }
+
     /**
-     * rotates a bitmap, returning new dimensions with the bitmap
-     * return bitmap
+     * Rotates a bitmap, returning new dimensions with the bitmap
+     *
+     * @param array $bitmap
+     * @param number $degree
+     * @return array
      */
     protected function rotateBitmap($bitmap, $degree)
     {
@@ -182,8 +239,14 @@ class PureCaptcha
             }
         return $result;
     }
+
     /**
-     * scales a bitmap to be bigger
+     * Scales a bitmap to be bigger
+     *
+     * @param array $bitmap
+     * @param numver @scaleX the scale factor in x direction
+     * @param number @scaleY the scale factor in y direction
+     * @return array
      */
     protected function scaleBitmap($bitmap, $scaleX, $scaleY)
     {
@@ -198,8 +261,13 @@ class PureCaptcha
             [(int)($i / $scaleX)];
         return $result;
     }
+
     /**
-     * adds random noise to the captcha
+     * Adds random noise to the captcha
+     *
+     * @param array $bitmap
+     * @param numver @noisePercent the percentage of noise to be added
+     * @return array
      */
     protected function distort($bitmap, $noisePercent = 5)
     {
@@ -211,7 +279,11 @@ class PureCaptcha
     }
 
     /**
-     * draw a captcha to the screen, returning its value
+     * Draw a captcha to the screen, returning its value
+     *
+     * @param bool $distort
+     * @param number @scale
+     * @return string
      */
     public function show($distort = true, $scale = 2.3)
     {
