@@ -52,12 +52,81 @@ class PureCaptcha
     protected $bitmap;
 
     /**
+     * The text to be displayed in captcha
+     *
+     * @var string
+     */
+    protected $captcha;
+
+    /**
+     * The length of the captcha text
+     *
+     * @var integer
+     */
+    protected $length;
+
+    /**
      * Constructor to intialize bitmap
      */
     function __construct()
     {
         $this->bitmap = unserialize(gzuncompress(base64_decode(
             preg_replace('/\s+/', '', $this->ascii))));
+
+        // Setting up default values
+        $this->length = 4;
+        $this->captcha = $this->randomText();
+
+    }
+
+    /**
+     * Returns the value of the captcha
+     *
+     * @return string
+     */
+    public function getCaptcha()
+    {
+        return $this->captcha;
+    }
+
+    /**
+     * Sets the captcha text
+     *
+     * @param $captcha string
+     * @return bool whether the $captcha was valid for not
+     */
+    public function setCaptcha($captcha)
+    {
+        $captcha = strtoupper($captcha);
+        // Checking if $captcha contains characters in the dataset
+        for ($i = 0; $i < strlen($captcha); ++$i)
+            if ($this->asciiEntry($captcha[$i]) == -1)
+                return false;
+
+        $this->captcha = $captcha;
+        $this->length = strlen($this->captcha);
+        return true;
+    }
+
+    /**
+     * Returns the length of the captcha
+     *
+     * @return integer
+     */
+    public function getLength()
+    {
+        return $this->length;
+    }
+
+    /**
+     * Sets the length of the captcha text and generates a new captcha
+     *
+     * @param $length integer
+     */
+    public function setLength($length)
+    {
+        $this->length = $length;
+        $this->captcha = $this->randomText();
     }
 
     /**
@@ -66,10 +135,10 @@ class PureCaptcha
      * @param  integer $length 
      * @return string          
      */
-    protected function randomText($length = 4)
+    protected function randomText()
     {
         $res = "";
-        for ($i = 0; $i < $length; ++$i)
+        for ($i = 0; $i < $this->length; ++$i)
             $res .= $this->chars[mt_rand(0, strlen($this->chars) - 1)];
         return $res;
     }
@@ -287,8 +356,7 @@ class PureCaptcha
      */
     public function show($distort = true, $scale = 2.3)
     {
-        $captcha = $this->randomText();
-        $bitmap = $this->textBitmap($captcha);
+        $bitmap = $this->textBitmap($this->captcha);
         $degree = mt_rand(2, 4);
         if (mt_rand() % 100 < 50)
             $degree =- $degree;
@@ -297,7 +365,7 @@ class PureCaptcha
         if ($distort)
             $bitmap = $this->distort($bitmap);
         $this->displayBitmap($bitmap);
-        return $captcha;
+        return $this->captcha;
     }
 
 }
