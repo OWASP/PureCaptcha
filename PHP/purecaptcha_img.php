@@ -1,12 +1,12 @@
 <?php
 session_start();
 if (!isset($_GET['t']))
-	$title="default";
+    $title = "default";
 else
-	$title=$_GET['t'];
+    $title = $_GET['t'];
 
 
 require_once "purecaptcha.php";
 
-$p=new PureCaptcha();
-$_SESSION["captcha_{$title}"]=$p->show();
+$p = new PureCaptcha();
+$_SESSION["captcha_{$title}"] = $p->show();
