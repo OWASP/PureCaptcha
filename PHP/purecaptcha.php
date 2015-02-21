@@ -22,12 +22,21 @@ class PureCaptcha
     function __construct()
     {
         $this->ascii=unserialize(gzuncompress(base64_decode(
-            preg_replace('/\s+/', '', $this->ascii))));
+                                                  preg_replace('/\s+/', '', $this->ascii))));
+        $this->text=$this->randomText();
+
     }
+
+    /**
+     * Contains the captcha text.
+     * @var string
+     */
+    public $text;
+
     /**
      * Generates random text for use in captcha
-     * @param  integer $length 
-     * @return string          
+     * @param  integer $length
+     * @return string
      */
     protected function randomText($length=4)
     {
@@ -44,7 +53,7 @@ class PureCaptcha
         for ($i=0;$i<strlen($this->chars);++$i)
             if ($this->chars[$i]==$char) return $i;
         return -1;
-        
+
     }
     /**
      * converts a text to a bitmap
@@ -63,9 +72,9 @@ class PureCaptcha
             {
                 for ($i=0;$i<$width;++$i)
                     $result[$baseY+$j][$baseX+$i]=
-                     1-$this->ascii[$this->asciiEntry($text[$index])][$j][$i];
+                        1-$this->ascii[$this->asciiEntry($text[$index])][$j][$i];
                 for ($i=0;$i<$spacing;++$i)
-                $result[$baseY+$j][$baseX+$width+$i]=0;
+                    $result[$baseY+$j][$baseX+$width+$i]=0;
             }
             $baseX+=$width+$spacing;
         }
@@ -80,7 +89,7 @@ class PureCaptcha
         echo $this->bitmap2bmp($bitmap);
     }
     /**
-     * generates a monochrome BMP file 
+     * generates a monochrome BMP file
      * a bitmap needs to be sent to this function
      * i.e a 2D array with every element being either 1 or 0
      * @param  integer $width
@@ -95,12 +104,12 @@ class PureCaptcha
         $bytemap=$this->bitmap2bytemap($bitmap);
 
         $rowSize=floor(($width+31)/32)*4;
-        $size=$rowSize*$height + 62; //62 metadata size 
+        $size=$rowSize*$height + 62; //62 metadata size
         #bitmap header
         $data= "BM"; //header
         $data.= (pack('V',$size)); //bitmap size ,4 bytes unsigned little endian
         $data.= "RRRR";
-        $data.= (pack('V',14+40+8)); //bitmap data start offset , 
+        $data.= (pack('V',14+40+8)); //bitmap data start offset ,
         //4 bytes unsigned little endian, 14 forced, 40 header, 8 colors
 
         #info header
@@ -108,14 +117,14 @@ class PureCaptcha
         //4 bytes unsigned little-endian
         $data.= (pack('V',$width)); //bitmap width , 4 bytes signed integer
         $data.= (pack('V',$height)); //bitmap height , 4 bytes signed integer
-        $data.= (pack('v',1)); //number of colored plains , 2 bytes 
-        $data.= (pack('v',1)); //color depth , 2 bytes 
+        $data.= (pack('v',1)); //number of colored plains , 2 bytes
+        $data.= (pack('v',1)); //color depth , 2 bytes
         $data.= (pack('V',0)); //compression algorithm , 4 bytes (0=none, RGB)
-        $data.= (pack('V',0)); //size of raw data, 0 is fine for no compression 
-        $data.= (pack('V',11808)); //horizontal resolution (dpi), 4 bytes 
-        $data.= (pack('V',11808)); //vertical resolution (dpi), 4 bytes 
-        $data.= (pack('V',0)); //number of colors in pallette (0 = all), 4 bytes 
-        $data.= (pack('V',0)); //number of important colors (0 = all), 4 bytes 
+        $data.= (pack('V',0)); //size of raw data, 0 is fine for no compression
+        $data.= (pack('V',11808)); //horizontal resolution (dpi), 4 bytes
+        $data.= (pack('V',11808)); //vertical resolution (dpi), 4 bytes
+        $data.= (pack('V',0)); //number of colors in pallette (0 = all), 4 bytes
+        $data.= (pack('V',0)); //number of important colors (0 = all), 4 bytes
 
         #color palette
         $data.= (pack('V',0x00FFFFFF)); //next color, white
@@ -128,11 +137,11 @@ class PureCaptcha
                         $data.= pack('C',$bytemap[$j][$i*4+$k]);
                     else
                         $data.= pack('C',0);
-                    return $data;
-                }
+        return $data;
+    }
     /**
      * Converts a bitmap to a bytemap, which is necessary for outputting it
-     * 
+     *
      */
     protected function bitmap2bytemap($bitmap)
     {
@@ -143,7 +152,7 @@ class PureCaptcha
         {
             for ($i=0;$i<$width/8;++$i)
             {
-                $bitstring="";  
+                $bitstring="";
                 for ($k=0;$k<8;++$k)
                     if (isset($bitmap[$j][$i*8+$k]))
                         $bitstring.=$bitmap[$j][$i*8+$k];
@@ -170,7 +179,7 @@ class PureCaptcha
         $x0 = $width/2 - $c*$newWidth/2 - $s*$newHeight/2;
         $y0 = $height/2 - $c*$newHeight/2 + $s*$newWidth/2;
         $result=array_fill(0, $newHeight, array_fill(0, $newWidth, 0));
-        for ($j=0;$j<$newHeight;++$j) 
+        for ($j=0;$j<$newHeight;++$j)
             for ($i=1;$i<$newWidth;++$i)
             {
                 $y=(int)(-$s*$i+$c*$j+$y0);
@@ -193,8 +202,8 @@ class PureCaptcha
         for ($j=0;$j<$newHeight;++$j)
             for ($i=0;$i<$newWidth;++$i)
                 $result[$j][$i]=$bitmap[(int)($j/$scaleY)]
-            [(int)($i/$scaleX)];
-            return $result;
+                [(int)($i/$scaleX)];
+        return $result;
     }
     /**
      * adds random noise to the captcha
@@ -213,8 +222,7 @@ class PureCaptcha
      */
     public function show($distort=true,$scale=2.3)
     {
-        $captcha=$this->randomText();
-        $bitmap=$this->textBitmap($captcha);
+        $bitmap=$this->textBitmap($this->text);
         $degree=mt_rand(2,4);
         if (mt_rand()%100<50)
             $degree=-$degree;
@@ -222,7 +230,7 @@ class PureCaptcha
         $bitmap=$this->scaleBitmap($bitmap,$scale,$scale);
         if ($distort) $bitmap=$this->distort($bitmap);
         $this->displayBitmap($bitmap);
-        return $captcha;
+        return $this->text;
     }
 
 }
