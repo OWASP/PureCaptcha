@@ -21,10 +21,9 @@ if (isset($_POST['CAPTCHA']))
 
 <form method='post'>
 <label>Captcha:</label>
-<input type='text' name='CAPTCHA' placeholder='captcha' />
-<a href='#' onclick='var t=document.getElementById("captcha"); t.src=t.src+"&amp;"+Math.random();' 
-><img id='captcha' src='purecaptcha_img.php?t=login_form' height='22'/></a>
+<img id='captcha' src='purecaptcha_img.php?t=login_form' height='22'/><a onclick='var t=document.getElementById("captcha"); t.src=t.src+"&amp;"+Math.random();' style="padding-left:20px; text-decoration:none; cursor:pointer ; color:red">(Reload)</a>
 <br/>
+<input type='text' name='CAPTCHA' placeholder='captcha'  size="20"/><br/>
 
 <input type='submit' />
 </form>

@@ -38,8 +38,9 @@ class PureCaptcha
      * @param  integer $length
      * @return string
      */
-    protected function randomText($length=4)
+    protected function randomText()
     {
+        $length = mt_rand(4,6) ;
         $res="";
         for ($i=0;$i<$length;++$i)
             $res.=$this->chars[mt_rand(0,strlen($this->chars)-1)];
