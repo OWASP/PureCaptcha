@@ -47,3 +47,7 @@ Store `$captcha` in the session and compare it user input later.
     // Getters and setters are provided for each
     $pureCaptcha->setCaptcha("M2H7");
     $captha = $pureCaptcha->getCaptcha();
+
+## License
+
+OWASP PureCaptcha is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
